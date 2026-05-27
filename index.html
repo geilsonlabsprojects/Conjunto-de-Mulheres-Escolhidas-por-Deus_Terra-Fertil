@@ -89,10 +89,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        // Importando Realtime Database em vez de Firestore
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // 1. CONFIGURAÇÕES DO FIREBASE
+        // 1. CONFIGURAÇÕES DO FIREBASE (Mesmas do Admin)
         const firebaseConfig = {
             apiKey: "AIzaSyBl6NR3OY8swcyAbxmxTptwbnghB3iHFRQ",
             authDomain: "terra-fertil-a5bb4.firebaseapp.com",
@@ -100,7 +99,6 @@
             storageBucket: "terra-fertil-a5bb4.firebasestorage.app",
             messagingSenderId: "869435719410",
             appId: "1:869435719410:web:32c855391f8d8888a9da6b",
-            // Adicionado databaseURL necessário para o Realtime Database
             databaseURL: "https://terra-fertil-a5bb4-default-rtdb.firebaseio.com" 
         };
 
@@ -108,7 +106,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Estado Global (Armazena os dados do RTDB)
+        // Estado Global
         const state = {
             config: { nome: 'Terra Fértil', subtitulo: '', tema: 'claro' },
             galeria: [],
@@ -123,7 +121,6 @@
         // 2. INICIALIZAÇÃO
         async function initApp() {
             try {
-                // Autenticação anônima para regras de leitura do Firebase (caso necessário)
                 await signInAnonymously(auth);
                 setupRealtimeListeners();
             } catch (error) {
@@ -138,7 +135,7 @@
             }
         }
 
-        // 3. LISTENERS DO REALTIME DATABASE
+        // 3. LISTENERS DO BANCO DE DADOS
         function setupRealtimeListeners() {
             const nodes = ['config_site', 'galeria', 'videos', 'avisos', 'eventos', 'redes_sociais', 'versiculos'];
             let loadedNodes = 0;
@@ -149,19 +146,19 @@
                     const data = snapshot.val();
                     
                     if (data) {
-                        // RTDB retorna objetos { id: {dados}, id2: {dados} }. 
-                        // Convertendo para array quando necessário:
+                        // Se for uma lista (Galeria, Avisos, Eventos, Videos, Versiculos)
                         if (['galeria', 'videos', 'avisos', 'eventos', 'versiculos'].includes(node)) {
                             state[node] = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-                        } else if (node === 'config_site') {
-                            // Pega a primeira configuração caso seja uma lista
-                            state.config = data[Object.keys(data)[0]] || data;
+                        } 
+                        // Se for objeto único (Configurações, Redes Sociais)
+                        else if (node === 'config_site') {
+                            state.config = data; // Correção: Recebe o objeto diretamente
                             applyConfig();
                         } else if (node === 'redes_sociais') {
-                            state.redes = data[Object.keys(data)[0]] || data;
+                            state.redes = data; // Correção: Recebe o objeto diretamente
                         }
                     } else {
-                        // Se não houver dados no nó
+                        // Limpa os dados se não houver nada no banco
                         if (['galeria', 'videos', 'avisos', 'eventos', 'versiculos'].includes(node)) {
                             state[node] = [];
                         } else {
@@ -169,7 +166,7 @@
                         }
                     }
 
-                    // Verifica se é a carga inicial para remover o loader
+                    // Controle de Loading Inicial
                     if (!state.isLoaded) {
                         loadedNodes++;
                         if (loadedNodes >= nodes.length) {
@@ -177,8 +174,7 @@
                             renderApp();
                         }
                     } else {
-                        // Atualiza a tela em tempo real após a primeira carga
-                        renderApp();
+                        renderApp(); // Atualiza em tempo real
                     }
                 });
             });
@@ -198,11 +194,13 @@
 
         function getYoutubeId(url) {
             if(!url) return null;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            // Regex mais robusto para pegar ID de qualquer formato do youtube
+            const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            return match ? match[1] : null;
         }
 
+        // Abre modal da galeria
         window.openImageModal = (url, title, desc) => {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 opacity-0 transition-opacity duration-300 cursor-pointer backdrop-blur-sm';
@@ -212,21 +210,21 @@
             };
             
             modal.innerHTML = `
-                <div class="max-w-5xl w-full text-center transform scale-95 transition-transform duration-300" id="modal-content" onclick="event.stopPropagation()">
-                    <img src="${url}" class="max-w-full max-h-[75vh] rounded-xl shadow-2xl mx-auto mb-6 object-contain border border-gray-800">
+                <div class="max-w-5xl w-full text-center transform scale-95 transition-transform duration-300 flex flex-col items-center justify-center h-full" id="modal-content" onclick="event.stopPropagation()">
+                    <img src="${url}" class="max-w-full max-h-[70vh] rounded-xl shadow-2xl mb-6 object-contain border border-gray-800">
                     <h3 class="text-white text-3xl font-bold serif">${title || ''}</h3>
-                    <p class="text-gray-400 mt-3 text-lg">${desc || ''}</p>
+                    <p class="text-gray-400 mt-3 text-lg">${desc !== 'undefined' && desc ? desc : ''}</p>
                     <button onclick="this.closest('.fixed').click()" class="mt-8 bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-full font-semibold transition-colors duration-300">Fechar Janela</button>
                 </div>
             `;
             document.body.appendChild(modal);
-            // Trigger anim
             setTimeout(() => {
                 modal.classList.add('opacity-100');
                 modal.querySelector('#modal-content').classList.remove('scale-95');
             }, 10);
         };
 
+        // Filtro da Galeria
         window.filterGallery = (term) => {
             const items = document.querySelectorAll('.gallery-item');
             term = term.toLowerCase();
@@ -242,51 +240,49 @@
             });
         };
 
-        // 5. RENDERIZAÇÃO PRINCIPAL DA INTERFACE
+        // 5. RENDERIZAÇÃO DA INTERFACE (Mapeando todos os dados do Admin)
         function renderApp() {
             const appDiv = document.getElementById('app');
             const c = state.config;
 
-            // -- HERO BANNER --
+            // ================= HEADER / BANNER =================
             const bannerStyle = c.banner 
                 ? `background-image: url('${c.banner}'); background-size: cover; background-position: center;` 
                 : 'background: linear-gradient(135deg, #1f2937 0%, #000000 100%);';
 
             const heroHtml = `
-                <header class="relative w-full h-[70vh] flex items-center justify-center overflow-hidden" style="${bannerStyle}">
-                    <div class="absolute inset-0 bg-black/50"></div> <!-- Overlay escuro -->
+                <header class="relative w-full h-[55vh] md:h-[70vh] overflow-hidden" style="${bannerStyle}">
+                    <div class="absolute inset-0 bg-black/30"></div> <!-- Fundo mais transparente para destacar a imagem -->
                     
-                    <div class="relative z-10 text-center px-4 glass p-10 md:p-14 rounded-3xl shadow-2xl max-w-4xl mx-auto mx-4 animate-fade-in-up">
-                        ${c.logo ? `<img src="${c.logo}" class="w-28 h-28 md:w-40 md:h-40 mx-auto rounded-full object-cover border-4 border-brand shadow-xl mb-8 transition-transform hover:scale-105 duration-300" alt="Logo">` : ''}
-                        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight serif tracking-tight">${c.nome || 'Bem-vindo'}</h1>
-                        <p class="text-lg md:text-2xl text-brand font-medium tracking-wide uppercase">${c.subtitulo || ''}</p>
-                    </div>
-                    
-                    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                        <svg class="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    <!-- Logo e Título alinhados no canto superior esquerdo -->
+                    <div class="relative z-10 p-6 md:p-12 animate-fade-in-up flex items-center gap-5 md:gap-6">
+                        ${c.logo ? `<img src="${c.logo}" class="w-20 h-20 md:w-32 md:h-32 rounded-full object-cover border-[3px] border-white shadow-2xl" alt="Logo">` : ''}
+                        <div>
+                            <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-1 leading-tight serif tracking-tight drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">${c.nome || 'Bem-vindo'}</h1>
+                            ${c.subtitulo ? `<p class="text-sm md:text-xl text-brand-light font-bold tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">${c.subtitulo}</p>` : ''}
+                        </div>
                     </div>
                 </header>
             `;
 
-            // -- VERSÍCULO EM DESTAQUE --
+            // ================= VERSÍCULO =================
             let versiculoHtml = '';
             if (state.versiculos && state.versiculos.length > 0) {
+                // Pega um versículo aleatório da lista
                 const v = state.versiculos[Math.floor(Math.random() * state.versiculos.length)];
                 versiculoHtml = `
                     <section class="py-16 px-6 bg-brand text-white text-center relative overflow-hidden">
-                        <!-- Ornamento de fundo -->
                         <svg class="absolute -top-24 -right-24 w-64 h-64 text-white opacity-5 transform rotate-45" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/></svg>
-                        
                         <div class="max-w-4xl mx-auto relative z-10">
-                            <svg class="w-12 h-12 mx-auto mb-6 opacity-40" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                            <p class="text-2xl md:text-4xl font-light italic mb-6 leading-relaxed serif">"${v.texto}"</p>
-                            <p class="text-xl font-bold tracking-widest uppercase">— ${v.referencia}</p>
+                            <svg class="w-10 h-10 mx-auto mb-4 opacity-40" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                            <p class="text-2xl md:text-3xl font-light italic mb-6 leading-relaxed serif">"${v.texto}"</p>
+                            <p class="text-lg font-bold tracking-widest uppercase">— ${v.referencia}</p>
                         </div>
                     </section>
                 `;
             }
 
-            // -- QUADRO DE AVISOS --
+            // ================= AVISOS =================
             let avisosHtml = '';
             if (state.avisos && state.avisos.length > 0) {
                 avisosHtml = `
@@ -295,17 +291,16 @@
                             <h3 class="text-4xl font-bold serif text-gray-900 dark:text-white">Quadro de Avisos</h3>
                             <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             ${state.avisos.map(a => `
-                                <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full transform hover:-translate-y-2">
-                                    ${a.imagem ? `<div class="w-full h-52 overflow-hidden"><img src="${a.imagem}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>` : ''}
-                                    <div class="p-8 flex-1 flex flex-col relative">
-                                        ${a.importante ? `<div class="absolute -top-4 right-6 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">IMPORTANTE</div>` : ''}
+                                <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full transform hover:-translate-y-2 relative">
+                                    ${a.importante ? `<div class="absolute top-4 right-4 z-20 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wide">Importante</div>` : ''}
+                                    ${a.imagem ? `<div class="w-full h-52 overflow-hidden relative"><img src="${a.imagem}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>` : ''}
+                                    <div class="p-8 flex-1 flex flex-col">
                                         <h4 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white group-hover:text-brand transition-colors">${a.titulo}</h4>
                                         <p class="text-gray-600 dark:text-gray-400 flex-1 leading-relaxed">${a.descricao}</p>
                                     </div>
-                                    <div class="h-1 w-full ${a.importante ? 'bg-red-500' : 'bg-brand'}"></div>
+                                    <div class="h-1 w-full ${a.importante ? 'bg-red-600' : 'bg-brand'}"></div>
                                 </div>
                             `).join('')}
                         </div>
@@ -313,9 +308,12 @@
                 `;
             }
 
-            // -- EVENTOS / AGENDA --
+            // ================= EVENTOS =================
             let eventosHtml = '';
             if (state.eventos && state.eventos.length > 0) {
+                // Ordena os eventos por data mais próxima
+                const eventosOrdenados = [...state.eventos].sort((a, b) => new Date(a.data) - new Date(b.data));
+                
                 eventosHtml = `
                     <section class="py-20 px-6 bg-gray-100 dark:bg-gray-800/40">
                         <div class="max-w-5xl mx-auto">
@@ -323,26 +321,29 @@
                                 <h3 class="text-4xl font-bold serif text-gray-900 dark:text-white">Próximos Eventos</h3>
                                 <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
                             </div>
-                            
                             <div class="space-y-6">
-                                ${state.eventos.sort((a,b) => new Date(a.data) - new Date(b.data)).map(e => {
-                                    const dateObj = new Date(e.data);
-                                    // Adicionando offset para fuso horário se necessário, mas simplificando para exibição
-                                    const dia = String(dateObj.getDate() + 1).padStart(2, '0'); // Corrige problema de UTC simplificado
-                                    const mes = dateObj.toLocaleString('pt-BR', { month: 'short' }).replace('.','').toUpperCase();
+                                ${eventosOrdenados.map(e => {
+                                    // Separar "YYYY-MM-DD" para evitar problemas de fuso horário
+                                    const partesData = e.data.split('-');
+                                    const ano = parseInt(partesData[0]);
+                                    const mesNum = parseInt(partesData[1]) - 1; // Meses no JS começam em 0
+                                    const dia = partesData[2];
+                                    
+                                    const dateObj = new Date(ano, mesNum, dia);
+                                    const mesStr = dateObj.toLocaleString('pt-BR', { month: 'short' }).replace('.','').toUpperCase();
                                     
                                     return `
                                     <div class="group flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
                                         <div class="bg-brand text-white p-6 md:w-36 flex flex-col justify-center items-center text-center">
-                                            <span class="text-3xl font-bold">${dia}</span>
-                                            <span class="text-sm tracking-widest">${mes}</span>
+                                            <span class="text-4xl font-bold">${dia}</span>
+                                            <span class="text-sm tracking-widest font-medium">${mesStr}</span>
                                         </div>
                                         <div class="p-6 md:p-8 flex-1">
-                                            <div class="flex justify-between items-start mb-2">
+                                            <div class="flex justify-between items-start mb-2 flex-col sm:flex-row gap-2">
                                                 <h4 class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-brand transition-colors">${e.titulo}</h4>
-                                                ${e.hora ? `<span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${e.hora}</span>` : ''}
+                                                ${e.hora ? `<span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${e.hora}</span>` : ''}
                                             </div>
-                                            <p class="text-gray-600 dark:text-gray-400 mt-2 mb-4 leading-relaxed">${e.descricao}</p>
+                                            ${e.descricao ? `<p class="text-gray-600 dark:text-gray-400 mt-2 mb-4 leading-relaxed">${e.descricao}</p>` : '<div class="mb-4"></div>'}
                                             ${e.local ? `<p class="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center gap-2"><svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> ${e.local}</p>` : ''}
                                         </div>
                                     </div>
@@ -353,9 +354,12 @@
                 `;
             }
 
-            // -- GALERIA --
+            // ================= GALERIA =================
             let galeriaHtml = '';
             if (state.galeria && state.galeria.length > 0) {
+                // Inverte a galeria para mostrar as mais recentes primeiro
+                const galeriaInvertida = [...state.galeria].reverse();
+                
                 galeriaHtml = `
                     <section class="py-20 px-6 max-w-7xl mx-auto">
                         <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -369,13 +373,10 @@
                             </div>
                         </div>
                         
-                        <!-- Grid responsiva estilo Masonry -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="gallery-grid">
-                            ${state.galeria.map(g => `
+                            ${galeriaInvertida.map(g => `
                                 <div class="gallery-item group relative aspect-square overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300" data-search="${g.titulo} ${g.descricao || ''}" onclick="openImageModal('${g.imagem}', '${g.titulo}', '${g.descricao || ''}')">
                                     <img src="${g.imagem}" loading="lazy" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
-                                    
-                                    <!-- Gradiente e Texto que aparecem no hover -->
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-6">
                                         <h4 class="text-white font-bold text-lg mb-1 transform translate-y-4 group-hover:translate-y-0 transition duration-300">${g.titulo}</h4>
                                         ${g.descricao ? `<p class="text-gray-300 text-sm truncate transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-75">${g.descricao}</p>` : ''}
@@ -387,14 +388,14 @@
                 `;
             }
 
-            // -- VÍDEOS DO YOUTUBE --
+            // ================= VIDEOS =================
             let videosHtml = '';
             if (state.videos && state.videos.length > 0) {
                 videosHtml = `
                     <section class="py-20 px-6 bg-gray-900 text-white overflow-hidden">
                         <div class="max-w-7xl mx-auto">
                             <div class="text-center mb-14">
-                                <h3 class="text-4xl font-bold serif">Vídeos Recentes</h3>
+                                <h3 class="text-4xl font-bold serif">Vídeos em Destaque</h3>
                                 <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
                             </div>
                             
@@ -420,7 +421,7 @@
                 `;
             }
 
-            // -- RODAPÉ --
+            // ================= FOOTER / REDES SOCIAIS =================
             const r = state.redes || {};
             const footerHtml = `
                 <footer class="bg-black text-white py-16 text-center relative border-t-4 border-brand">
@@ -440,11 +441,11 @@
                 </footer>
             `;
 
-            // Junta tudo e aplica no DOM
+            // Junta tudo e insere na tela
             appDiv.innerHTML = heroHtml + versiculoHtml + avisosHtml + eventosHtml + galeriaHtml + videosHtml + footerHtml;
         }
 
-        // Inicia a aplicação ao carregar
+        // Inicia a aplicação
         initApp();
     </script>
 </body>
