@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- O título será injetado dinamicamente -->
     <title>Carregando...</title>
     
-    <!-- Tailwind CSS para Design Moderno e Responsivo -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -15,9 +14,18 @@
                 extend: {
                     colors: {
                         brand: {
-                            light: '#fdf2f8',
-                            DEFAULT: '#db2777', // Rosa profissional
-                            dark: '#9d174d',
+                            light: '#fce7f3',
+                            DEFAULT: '#db2777', // Rosa principal
+                            dark: '#be185d',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
                 }
@@ -25,54 +33,66 @@
         }
     </script>
 
-    <!-- Estilos Adicionais -->
+    <!-- Google Fonts -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
         
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        /* Modal e transições */
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        h1, h2, h3, .serif { 
+            font-family: 'Playfair Display', serif; 
+        }
         
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
-        .dark .glass-panel { background: rgba(31, 41, 55, 0.9); }
-        
-        /* Ocultar barra de rolagem no grid horizontal */
+        /* Ocultar barra de rolagem horizontal */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Loader */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #db2777; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Loader Elegante */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(219, 39, 119, 0.3);
+            border-radius: 50%;
+            border-top-color: #db2777;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Efeito de Vidro */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass {
+            background: rgba(31, 41, 55, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
-
-    <!-- Manifesto PWA Dinâmico Injetado via JS -->
-    <link id="pwa-manifest" rel="manifest" href="">
 </head>
-<body class="bg-gray-50 text-gray-900 transition-colors duration-300">
+<body class="bg-gray-50 text-gray-800 transition-colors duration-500">
 
-    <!-- Container Principal do App (Tudo gerado dinamicamente aqui) -->
-    <div id="app" class="min-h-screen flex flex-col relative">
-        <div class="flex-1 flex items-center justify-center min-h-screen">
-            <div class="flex flex-col items-center gap-4">
-                <div class="loader"></div>
-                <p class="text-gray-500 animate-pulse" id="loading-text">Conectando aos servidores...</p>
-            </div>
+    <!-- Container Principal -->
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- Tela de Carregamento Inicial -->
+        <div class="flex-1 flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+            <div class="spinner mb-6"></div>
+            <h2 class="text-xl font-medium text-gray-600 dark:text-gray-300 animate-pulse">Conectando...</h2>
         </div>
     </div>
 
-    <!-- Firebase e Lógica da Aplicação -->
+    <!-- Lógica da Aplicação - Firebase Realtime Database -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // Importando Realtime Database em vez de Firestore
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ==========================================
-        // 1. CONFIGURAÇÕES GERAIS E API
-        // ==========================================
+        // 1. CONFIGURAÇÕES DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBl6NR3OY8swcyAbxmxTptwbnghB3iHFRQ",
             authDomain: "terra-fertil-a5bb4.firebaseapp.com",
@@ -80,110 +100,131 @@
             storageBucket: "terra-fertil-a5bb4.firebasestorage.app",
             messagingSenderId: "869435719410",
             appId: "1:869435719410:web:32c855391f8d8888a9da6b",
-            measurementId: "G-VZ14MQG9KF"
+            // Adicionado databaseURL necessário para o Realtime Database
+            databaseURL: "https://terra-fertil-a5bb4-default-rtdb.firebaseio.com" 
         };
-        const IMGBB_API_KEY = "d6bfa5a94700a8086f78f1674758e7ab";
 
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
 
-        // Estado Global da Aplicação
+        // Estado Global (Armazena os dados do RTDB)
         const state = {
-            isAdmin: false,
-            config: {},
+            config: { nome: 'Terra Fértil', subtitulo: '', tema: 'claro' },
             galeria: [],
             videos: [],
             avisos: [],
             eventos: [],
             redes: {},
-            versiculos: []
+            versiculos: [],
+            isLoaded: false
         };
 
-        // ==========================================
-        // 2. INICIALIZAÇÃO E PWA
-        // ==========================================
+        // 2. INICIALIZAÇÃO
         async function initApp() {
             try {
-                // Autenticação anônima garantida para regras básicas do Firestore
+                // Autenticação anônima para regras de leitura do Firebase (caso necessário)
                 await signInAnonymously(auth);
                 setupRealtimeListeners();
             } catch (error) {
-                document.getElementById('app').innerHTML = `<div class="p-10 text-red-500 text-center">Erro ao conectar com banco de dados: ${error.message}</div>`;
+                document.getElementById('app').innerHTML = `
+                    <div class="flex items-center justify-center min-h-screen bg-red-50 text-red-600 p-6 text-center">
+                        <div>
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h1 class="text-2xl font-bold mb-2">Erro de Conexão</h1>
+                            <p>${error.message}</p>
+                        </div>
+                    </div>`;
             }
         }
 
-        function setupPWA(config) {
-            const manifest = {
-                name: config.nome || "App",
-                short_name: config.subtitulo || "App",
-                start_url: "/",
-                display: "standalone",
-                background_color: config.tema === 'escuro' ? '#1f2937' : '#f8f9fa',
-                theme_color: "#db2777"
-            };
-            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
-        }
-
-        // ==========================================
-        // 3. LISTENERS EM TEMPO REAL (FIRESTORE)
-        // ==========================================
+        // 3. LISTENERS DO REALTIME DATABASE
         function setupRealtimeListeners() {
-            // Configurações Globais
-            onSnapshot(collection(db, "config_site"), (snapshot) => {
-                if(!snapshot.empty) {
-                    state.config = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                    document.title = `${state.config.nome || 'Site'} - ${state.config.subtitulo || ''}`;
-                    if(state.config.tema === 'escuro') document.body.classList.add('dark', 'bg-gray-900', 'text-white');
-                    else document.body.classList.remove('dark', 'bg-gray-900', 'text-white');
-                    setupPWA(state.config);
-                }
-                renderApp();
-            });
+            const nodes = ['config_site', 'galeria', 'videos', 'avisos', 'eventos', 'redes_sociais', 'versiculos'];
+            let loadedNodes = 0;
 
-            // Demais coleções
-            const collections = ['galeria', 'videos', 'avisos', 'eventos', 'redes_sociais', 'versiculos'];
-            collections.forEach(col => {
-                onSnapshot(collection(db, col), (snapshot) => {
-                    if (col === 'redes_sociais' && !snapshot.empty) {
-                        state.redes = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            nodes.forEach(node => {
+                const dbRef = ref(db, node);
+                onValue(dbRef, (snapshot) => {
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        // RTDB retorna objetos { id: {dados}, id2: {dados} }. 
+                        // Convertendo para array quando necessário:
+                        if (['galeria', 'videos', 'avisos', 'eventos', 'versiculos'].includes(node)) {
+                            state[node] = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                        } else if (node === 'config_site') {
+                            // Pega a primeira configuração caso seja uma lista
+                            state.config = data[Object.keys(data)[0]] || data;
+                            applyConfig();
+                        } else if (node === 'redes_sociais') {
+                            state.redes = data[Object.keys(data)[0]] || data;
+                        }
                     } else {
-                        state[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        // Se não houver dados no nó
+                        if (['galeria', 'videos', 'avisos', 'eventos', 'versiculos'].includes(node)) {
+                            state[node] = [];
+                        } else {
+                            state[node === 'config_site' ? 'config' : 'redes'] = {};
+                        }
                     }
-                    renderApp();
+
+                    // Verifica se é a carga inicial para remover o loader
+                    if (!state.isLoaded) {
+                        loadedNodes++;
+                        if (loadedNodes >= nodes.length) {
+                            state.isLoaded = true;
+                            renderApp();
+                        }
+                    } else {
+                        // Atualiza a tela em tempo real após a primeira carga
+                        renderApp();
+                    }
                 });
             });
         }
 
-        // ==========================================
-        // 4. FUNÇÕES UTILITÁRIAS
-        // ==========================================
+        // 4. FUNÇÕES AUXILIARES
+        function applyConfig() {
+            document.title = `${state.config.nome || 'Site'} - ${state.config.subtitulo || ''}`;
+            if (state.config.tema === 'escuro') {
+                document.body.classList.add('dark', 'bg-gray-900', 'text-white');
+                document.body.classList.remove('bg-gray-50', 'text-gray-800');
+            } else {
+                document.body.classList.remove('dark', 'bg-gray-900', 'text-white');
+                document.body.classList.add('bg-gray-50', 'text-gray-800');
+            }
+        }
+
         function getYoutubeId(url) {
+            if(!url) return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        window.toggleAdmin = () => {
-            state.isAdmin = !state.isAdmin;
-            renderApp();
-        };
-
         window.openImageModal = (url, title, desc) => {
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 fade-in cursor-pointer';
-            modal.onclick = () => modal.remove();
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 opacity-0 transition-opacity duration-300 cursor-pointer backdrop-blur-sm';
+            modal.onclick = () => {
+                modal.classList.remove('opacity-100');
+                setTimeout(() => modal.remove(), 300);
+            };
+            
             modal.innerHTML = `
-                <div class="max-w-4xl w-full text-center" onclick="event.stopPropagation()">
-                    <img src="${url}" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl mx-auto mb-4 object-contain">
-                    <h3 class="text-white text-2xl font-bold">${title || ''}</h3>
-                    <p class="text-gray-300 mt-2">${desc || ''}</p>
-                    <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-gray-200">Fechar</button>
+                <div class="max-w-5xl w-full text-center transform scale-95 transition-transform duration-300" id="modal-content" onclick="event.stopPropagation()">
+                    <img src="${url}" class="max-w-full max-h-[75vh] rounded-xl shadow-2xl mx-auto mb-6 object-contain border border-gray-800">
+                    <h3 class="text-white text-3xl font-bold serif">${title || ''}</h3>
+                    <p class="text-gray-400 mt-3 text-lg">${desc || ''}</p>
+                    <button onclick="this.closest('.fixed').click()" class="mt-8 bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-full font-semibold transition-colors duration-300">Fechar Janela</button>
                 </div>
             `;
             document.body.appendChild(modal);
+            // Trigger anim
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                modal.querySelector('#modal-content').classList.remove('scale-95');
+            }, 10);
         };
 
         window.filterGallery = (term) => {
@@ -191,74 +232,80 @@
             term = term.toLowerCase();
             items.forEach(item => {
                 const text = item.getAttribute('data-search').toLowerCase();
-                item.style.display = text.includes(term) ? 'block' : 'none';
+                if (text.includes(term)) {
+                    item.style.display = 'block';
+                    setTimeout(() => item.style.opacity = '1', 10);
+                } else {
+                    item.style.opacity = '0';
+                    setTimeout(() => item.style.display = 'none', 300);
+                }
             });
         };
 
-        // ==========================================
-        // 5. RENDERIZAÇÃO DA INTERFACE (NADA ESTÁTICO)
-        // ==========================================
+        // 5. RENDERIZAÇÃO PRINCIPAL DA INTERFACE
         function renderApp() {
             const appDiv = document.getElementById('app');
-            appDiv.innerHTML = ''; // Limpa tudo
-
-            if (state.isAdmin) {
-                appDiv.appendChild(renderAdminPanel());
-            } else {
-                appDiv.appendChild(renderPublicSite());
-            }
-        }
-
-        // --- RENDER SITE PÚBLICO ---
-        function renderPublicSite() {
-            const container = document.createElement('div');
-            container.className = 'w-full fade-in';
             const c = state.config;
 
-            // 1. Cabeçalho / Hero Banner
+            // -- HERO BANNER --
+            const bannerStyle = c.banner 
+                ? `background-image: url('${c.banner}'); background-size: cover; background-position: center;` 
+                : 'background: linear-gradient(135deg, #1f2937 0%, #000000 100%);';
+
             const heroHtml = `
-                <header class="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center overflow-hidden bg-gray-900">
-                    ${c.banner ? `<img src="${c.banner}" class="absolute inset-0 w-full h-full object-cover opacity-50" alt="Banner">` : ''}
-                    <div class="relative z-10 text-center px-4 glass-panel p-8 md:p-12 rounded-2xl shadow-2xl max-w-3xl mx-auto">
-                        ${c.logo ? `<img src="${c.logo}" class="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-full object-cover border-4 border-brand shadow-lg mb-6" alt="Logo">` : ''}
-                        <h1 class="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">${c.nome || 'Bem-vindo'}</h1>
-                        <h2 class="text-lg md:text-2xl text-brand font-semibold">${c.subtitulo || ''}</h2>
+                <header class="relative w-full h-[70vh] flex items-center justify-center overflow-hidden" style="${bannerStyle}">
+                    <div class="absolute inset-0 bg-black/50"></div> <!-- Overlay escuro -->
+                    
+                    <div class="relative z-10 text-center px-4 glass p-10 md:p-14 rounded-3xl shadow-2xl max-w-4xl mx-auto mx-4 animate-fade-in-up">
+                        ${c.logo ? `<img src="${c.logo}" class="w-28 h-28 md:w-40 md:h-40 mx-auto rounded-full object-cover border-4 border-brand shadow-xl mb-8 transition-transform hover:scale-105 duration-300" alt="Logo">` : ''}
+                        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight serif tracking-tight">${c.nome || 'Bem-vindo'}</h1>
+                        <p class="text-lg md:text-2xl text-brand font-medium tracking-wide uppercase">${c.subtitulo || ''}</p>
+                    </div>
+                    
+                    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                        <svg class="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                     </div>
                 </header>
             `;
 
-            // 2. Versículo em destaque
+            // -- VERSÍCULO EM DESTAQUE --
             let versiculoHtml = '';
-            if (state.versiculos.length > 0) {
+            if (state.versiculos && state.versiculos.length > 0) {
                 const v = state.versiculos[Math.floor(Math.random() * state.versiculos.length)];
                 versiculoHtml = `
-                    <section class="py-12 px-4 bg-brand text-white text-center">
-                        <div class="max-w-4xl mx-auto">
-                            <svg class="w-10 h-10 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                            <p class="text-xl md:text-3xl font-light italic mb-4">"${v.texto}"</p>
-                            <p class="text-lg font-bold">— ${v.referencia}</p>
+                    <section class="py-16 px-6 bg-brand text-white text-center relative overflow-hidden">
+                        <!-- Ornamento de fundo -->
+                        <svg class="absolute -top-24 -right-24 w-64 h-64 text-white opacity-5 transform rotate-45" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/></svg>
+                        
+                        <div class="max-w-4xl mx-auto relative z-10">
+                            <svg class="w-12 h-12 mx-auto mb-6 opacity-40" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                            <p class="text-2xl md:text-4xl font-light italic mb-6 leading-relaxed serif">"${v.texto}"</p>
+                            <p class="text-xl font-bold tracking-widest uppercase">— ${v.referencia}</p>
                         </div>
                     </section>
                 `;
             }
 
-            // 3. Avisos Importantes
+            // -- QUADRO DE AVISOS --
             let avisosHtml = '';
-            if (state.avisos.length > 0) {
+            if (state.avisos && state.avisos.length > 0) {
                 avisosHtml = `
-                    <section class="py-16 px-4 max-w-7xl mx-auto">
-                        <h3 class="text-3xl font-bold text-center mb-10 serif">Quadro de Avisos</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <section class="py-20 px-6 max-w-7xl mx-auto">
+                        <div class="text-center mb-14">
+                            <h3 class="text-4xl font-bold serif text-gray-900 dark:text-white">Quadro de Avisos</h3>
+                            <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             ${state.avisos.map(a => `
-                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-t-4 ${a.importante ? 'border-red-500 transform hover:-translate-y-1 transition' : 'border-brand'}">
-                                    ${a.imagem ? `<img src="${a.imagem}" class="w-full h-48 object-cover">` : ''}
-                                    <div class="p-6">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h4 class="text-xl font-bold">${a.titulo}</h4>
-                                            ${a.importante ? `<span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">Importante</span>` : ''}
-                                        </div>
-                                        <p class="text-gray-600 dark:text-gray-300">${a.descricao}</p>
+                                <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full transform hover:-translate-y-2">
+                                    ${a.imagem ? `<div class="w-full h-52 overflow-hidden"><img src="${a.imagem}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>` : ''}
+                                    <div class="p-8 flex-1 flex flex-col relative">
+                                        ${a.importante ? `<div class="absolute -top-4 right-6 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">IMPORTANTE</div>` : ''}
+                                        <h4 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white group-hover:text-brand transition-colors">${a.titulo}</h4>
+                                        <p class="text-gray-600 dark:text-gray-400 flex-1 leading-relaxed">${a.descricao}</p>
                                     </div>
+                                    <div class="h-1 w-full ${a.importante ? 'bg-red-500' : 'bg-brand'}"></div>
                                 </div>
                             `).join('')}
                         </div>
@@ -266,49 +313,72 @@
                 `;
             }
 
-            // 4. Agenda / Eventos
+            // -- EVENTOS / AGENDA --
             let eventosHtml = '';
-            if (state.eventos.length > 0) {
+            if (state.eventos && state.eventos.length > 0) {
                 eventosHtml = `
-                    <section class="py-16 px-4 bg-gray-100 dark:bg-gray-800/50">
-                        <div class="max-w-4xl mx-auto">
-                            <h3 class="text-3xl font-bold text-center mb-10 serif">Próximos Eventos</h3>
-                            <div class="space-y-4">
-                                ${state.eventos.sort((a,b) => new Date(a.data) - new Date(b.data)).map(e => `
-                                    <div class="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6 items-center border-l-4 border-brand">
-                                        <div class="flex-shrink-0 text-center md:mr-8 mb-4 md:mb-0">
-                                            <div class="text-brand font-bold text-2xl">${new Date(e.data).toLocaleDateString('pt-BR', {day:'2-digit', month:'short'}).toUpperCase()}</div>
-                                            <div class="text-gray-500 text-sm">${e.hora || ''}</div>
+                    <section class="py-20 px-6 bg-gray-100 dark:bg-gray-800/40">
+                        <div class="max-w-5xl mx-auto">
+                            <div class="text-center mb-14">
+                                <h3 class="text-4xl font-bold serif text-gray-900 dark:text-white">Próximos Eventos</h3>
+                                <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                ${state.eventos.sort((a,b) => new Date(a.data) - new Date(b.data)).map(e => {
+                                    const dateObj = new Date(e.data);
+                                    // Adicionando offset para fuso horário se necessário, mas simplificando para exibição
+                                    const dia = String(dateObj.getDate() + 1).padStart(2, '0'); // Corrige problema de UTC simplificado
+                                    const mes = dateObj.toLocaleString('pt-BR', { month: 'short' }).replace('.','').toUpperCase();
+                                    
+                                    return `
+                                    <div class="group flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
+                                        <div class="bg-brand text-white p-6 md:w-36 flex flex-col justify-center items-center text-center">
+                                            <span class="text-3xl font-bold">${dia}</span>
+                                            <span class="text-sm tracking-widest">${mes}</span>
                                         </div>
-                                        <div class="flex-grow text-center md:text-left">
-                                            <h4 class="text-xl font-bold">${e.titulo}</h4>
-                                            <p class="text-gray-600 dark:text-gray-400 mt-1">${e.descricao}</p>
-                                            <p class="text-sm text-gray-500 mt-2 font-semibold">📍 ${e.local}</p>
+                                        <div class="p-6 md:p-8 flex-1">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <h4 class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-brand transition-colors">${e.titulo}</h4>
+                                                ${e.hora ? `<span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${e.hora}</span>` : ''}
+                                            </div>
+                                            <p class="text-gray-600 dark:text-gray-400 mt-2 mb-4 leading-relaxed">${e.descricao}</p>
+                                            ${e.local ? `<p class="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center gap-2"><svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> ${e.local}</p>` : ''}
                                         </div>
                                     </div>
-                                `).join('')}
+                                `}).join('')}
                             </div>
                         </div>
                     </section>
                 `;
             }
 
-            // 5. Galeria Dinâmica
+            // -- GALERIA --
             let galeriaHtml = '';
-            if (state.galeria.length > 0) {
+            if (state.galeria && state.galeria.length > 0) {
                 galeriaHtml = `
-                    <section class="py-16 px-4 max-w-7xl mx-auto">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                            <h3 class="text-3xl font-bold serif">Nossa Galeria</h3>
-                            <input type="text" placeholder="Pesquisar fotos..." onkeyup="filterGallery(this.value)" class="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand w-full md:w-72">
+                    <section class="py-20 px-6 max-w-7xl mx-auto">
+                        <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                            <div>
+                                <h3 class="text-4xl font-bold serif text-gray-900 dark:text-white">Nossa Galeria</h3>
+                                <div class="w-24 h-1 bg-brand mt-4 rounded-full"></div>
+                            </div>
+                            <div class="relative w-full md:w-80">
+                                <input type="text" placeholder="Pesquisar fotos..." onkeyup="filterGallery(this.value)" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand shadow-sm transition">
+                                <svg class="w-5 h-5 absolute left-3 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="gallery-grid">
+                        
+                        <!-- Grid responsiva estilo Masonry -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="gallery-grid">
                             ${state.galeria.map(g => `
-                                <div class="gallery-item group relative aspect-square overflow-hidden rounded-xl cursor-pointer shadow-sm hover:shadow-xl transition" data-search="${g.titulo} ${g.descricao}" onclick="openImageModal('${g.imagem}', '${g.titulo}', '${g.descricao}')">
-                                    <img src="${g.imagem}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-4">
-                                        <h4 class="text-white font-bold">${g.titulo}</h4>
-                                        <p class="text-gray-200 text-sm truncate">${g.descricao || ''}</p>
+                                <div class="gallery-item group relative aspect-square overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300" data-search="${g.titulo} ${g.descricao || ''}" onclick="openImageModal('${g.imagem}', '${g.titulo}', '${g.descricao || ''}')">
+                                    <img src="${g.imagem}" loading="lazy" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
+                                    
+                                    <!-- Gradiente e Texto que aparecem no hover -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-6">
+                                        <h4 class="text-white font-bold text-lg mb-1 transform translate-y-4 group-hover:translate-y-0 transition duration-300">${g.titulo}</h4>
+                                        ${g.descricao ? `<p class="text-gray-300 text-sm truncate transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-75">${g.descricao}</p>` : ''}
                                     </div>
                                 </div>
                             `).join('')}
@@ -317,23 +387,29 @@
                 `;
             }
 
-            // 6. Vídeos (YouTube Embed)
+            // -- VÍDEOS DO YOUTUBE --
             let videosHtml = '';
-            if (state.videos.length > 0) {
+            if (state.videos && state.videos.length > 0) {
                 videosHtml = `
-                    <section class="py-16 px-4 bg-gray-900 text-white">
+                    <section class="py-20 px-6 bg-gray-900 text-white overflow-hidden">
                         <div class="max-w-7xl mx-auto">
-                            <h3 class="text-3xl font-bold text-center mb-10 serif">Vídeos Recentes</h3>
-                            <div class="flex overflow-x-auto hide-scroll gap-6 pb-8 snap-x">
+                            <div class="text-center mb-14">
+                                <h3 class="text-4xl font-bold serif">Vídeos Recentes</h3>
+                                <div class="w-24 h-1 bg-brand mx-auto mt-4 rounded-full"></div>
+                            </div>
+                            
+                            <div class="flex overflow-x-auto hide-scroll gap-8 pb-8 snap-x snap-mandatory px-4">
                                 ${state.videos.map(v => {
                                     const yid = getYoutubeId(v.urlYoutube);
                                     if(!yid) return '';
                                     return `
-                                    <div class="snap-center shrink-0 w-80 md:w-96 bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
-                                        <iframe width="100%" height="215" src="https://www.youtube.com/embed/${yid}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                                        <div class="p-5">
-                                            <h4 class="font-bold text-lg mb-2">${v.titulo}</h4>
-                                            <p class="text-gray-400 text-sm line-clamp-2">${v.descricao}</p>
+                                    <div class="snap-center shrink-0 w-[85vw] md:w-[400px] bg-gray-800 rounded-2xl overflow-hidden shadow-2xl border border-gray-700 hover:border-gray-500 transition-colors">
+                                        <div class="aspect-video relative">
+                                            <iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${yid}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                        </div>
+                                        <div class="p-6">
+                                            <h4 class="font-bold text-xl mb-2 line-clamp-1">${v.titulo}</h4>
+                                            ${v.descricao ? `<p class="text-gray-400 text-sm line-clamp-2">${v.descricao}</p>` : ''}
                                         </div>
                                     </div>
                                     `;
@@ -344,285 +420,31 @@
                 `;
             }
 
-            // 7. Rodapé Dinâmico
+            // -- RODAPÉ --
             const r = state.redes || {};
             const footerHtml = `
-                <footer class="bg-black text-white py-12 text-center relative">
-                    <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
-                        <h4 class="text-2xl font-bold serif mb-6">${c.nome || 'Conecte-se conosco'}</h4>
-                        <div class="flex gap-6 mb-8">
-                            ${r.instagram ? `<a href="${r.instagram}" target="_blank" class="hover:text-brand transition">Instagram</a>` : ''}
-                            ${r.facebook ? `<a href="${r.facebook}" target="_blank" class="hover:text-brand transition">Facebook</a>` : ''}
-                            ${r.youtube ? `<a href="${r.youtube}" target="_blank" class="hover:text-brand transition">YouTube</a>` : ''}
-                            ${r.tiktok ? `<a href="${r.tiktok}" target="_blank" class="hover:text-brand transition">TikTok</a>` : ''}
-                        </div>
-                        <p class="text-gray-500 text-sm">&copy; ${new Date().getFullYear()} ${c.nome || 'Site'}. Todos os direitos reservados.</p>
+                <footer class="bg-black text-white py-16 text-center relative border-t-4 border-brand">
+                    <div class="max-w-4xl mx-auto px-6 flex flex-col items-center">
+                        ${c.logo ? `<img src="${c.logo}" class="w-16 h-16 rounded-full mb-6 grayscale hover:grayscale-0 transition duration-300">` : ''}
                         
-                        <button onclick="toggleAdmin()" class="mt-8 text-xs text-gray-700 hover:text-gray-400 border border-gray-800 px-3 py-1 rounded transition">Acesso Administrativo</button>
+                        <h4 class="text-3xl font-bold serif mb-8">${c.nome || 'Conecte-se conosco'}</h4>
+                        
+                        <div class="flex flex-wrap justify-center gap-6 mb-10">
+                            ${r.instagram ? `<a href="${r.instagram}" target="_blank" class="bg-gray-900 hover:bg-brand hover:-translate-y-1 p-4 rounded-full transition duration-300 flex items-center gap-2 font-medium"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg> Instagram</a>` : ''}
+                            ${r.facebook ? `<a href="${r.facebook}" target="_blank" class="bg-gray-900 hover:bg-brand hover:-translate-y-1 p-4 rounded-full transition duration-300 flex items-center gap-2 font-medium"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Facebook</a>` : ''}
+                            ${r.youtube ? `<a href="${r.youtube}" target="_blank" class="bg-gray-900 hover:bg-brand hover:-translate-y-1 p-4 rounded-full transition duration-300 flex items-center gap-2 font-medium"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg> YouTube</a>` : ''}
+                        </div>
+                        
+                        <p class="text-gray-500 text-sm mt-8">&copy; ${new Date().getFullYear()} ${c.nome || 'Site'}. Todos os direitos reservados.</p>
                     </div>
                 </footer>
             `;
 
-            container.innerHTML = heroHtml + versiculoHtml + avisosHtml + eventosHtml + galeriaHtml + videosHtml + footerHtml;
-            return container;
+            // Junta tudo e aplica no DOM
+            appDiv.innerHTML = heroHtml + versiculoHtml + avisosHtml + eventosHtml + galeriaHtml + videosHtml + footerHtml;
         }
 
-        // --- RENDER PAINEL ADMINISTRATIVO ---
-        function renderAdminPanel() {
-            const container = document.createElement('div');
-            container.className = 'w-full min-h-screen bg-gray-100 dark:bg-gray-900 fade-in p-4 md:p-8';
-            
-            container.innerHTML = `
-                <div class="max-w-6xl mx-auto">
-                    <div class="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <div>
-                            <h2 class="text-2xl font-bold text-brand">Painel de Controle</h2>
-                            <p class="text-gray-500 text-sm">Gerenciamento em Tempo Real</p>
-                        </div>
-                        <button onclick="toggleAdmin()" class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg font-semibold transition">Voltar ao Site</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        
-                        <!-- Coluna 1: Formulários de Adição -->
-                        <div class="lg:col-span-1 space-y-6">
-                            
-                            <!-- Form Galeria -->
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                <h3 class="font-bold text-lg mb-4 border-b pb-2">Nova Foto (Galeria)</h3>
-                                <form onsubmit="handleUpload(event, 'galeria')" class="space-y-3">
-                                    <input type="text" id="g-titulo" placeholder="Título" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
-                                    <textarea id="g-desc" placeholder="Descrição/Legenda" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></textarea>
-                                    <input type="date" id="g-data" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
-                                    <input type="file" id="g-file" accept="image/*" required class="w-full text-sm">
-                                    <button type="submit" class="w-full bg-brand text-white py-2 rounded font-bold hover:bg-brand-dark transition">Fazer Upload e Salvar</button>
-                                    <p id="g-status" class="text-xs text-center text-gray-500"></p>
-                                </form>
-                            </div>
-
-                            <!-- Form Aviso -->
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                <h3 class="font-bold text-lg mb-4 border-b pb-2">Novo Aviso</h3>
-                                <form onsubmit="handleSave(event, 'avisos')" class="space-y-3">
-                                    <input type="text" id="a-titulo" placeholder="Título" required class="w-full p-2 border rounded dark:bg-gray-700">
-                                    <textarea id="a-descricao" placeholder="Descrição" required class="w-full p-2 border rounded dark:bg-gray-700"></textarea>
-                                    <input type="url" id="a-imagem" placeholder="URL da Imagem (Opcional)" class="w-full p-2 border rounded dark:bg-gray-700">
-                                    <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="a-importante"> Marcar como Urgente/Importante</label>
-                                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition">Salvar Aviso</button>
-                                </form>
-                            </div>
-
-                            <!-- Form Vídeo -->
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                <h3 class="font-bold text-lg mb-4 border-b pb-2">Adicionar Vídeo YouTube</h3>
-                                <form onsubmit="handleSave(event, 'videos')" class="space-y-3">
-                                    <input type="text" id="v-titulo" placeholder="Título" required class="w-full p-2 border rounded dark:bg-gray-700">
-                                    <input type="url" id="v-urlYoutube" placeholder="Link do YouTube" required class="w-full p-2 border rounded dark:bg-gray-700">
-                                    <textarea id="v-descricao" placeholder="Descrição curta" class="w-full p-2 border rounded dark:bg-gray-700"></textarea>
-                                    <button type="submit" class="w-full bg-red-600 text-white py-2 rounded font-bold hover:bg-red-700 transition">Salvar Vídeo</button>
-                                </form>
-                            </div>
-
-                        </div>
-
-                        <!-- Coluna 2 e 3: Listagem de Dados para Exclusão/Gerenciamento -->
-                        <div class="lg:col-span-2 space-y-6">
-                            
-                            <!-- Configurações do Site -->
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border-l-4 border-brand">
-                                <h3 class="font-bold text-lg mb-4 border-b pb-2">Configurações Gerais do Site</h3>
-                                <form onsubmit="saveConfig(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-xs text-gray-500">Nome do Conjunto</label>
-                                        <input type="text" id="c-nome" value="${state.config.nome || ''}" class="w-full p-2 border rounded dark:bg-gray-700">
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-gray-500">Subtítulo</label>
-                                        <input type="text" id="c-subtitulo" value="${state.config.subtitulo || ''}" class="w-full p-2 border rounded dark:bg-gray-700">
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-gray-500">URL da Logo</label>
-                                        <input type="url" id="c-logo" value="${state.config.logo || ''}" class="w-full p-2 border rounded dark:bg-gray-700">
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-gray-500">URL do Banner Principal</label>
-                                        <input type="url" id="c-banner" value="${state.config.banner || ''}" class="w-full p-2 border rounded dark:bg-gray-700">
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-gray-500">Tema</label>
-                                        <select id="c-tema" class="w-full p-2 border rounded dark:bg-gray-700">
-                                            <option value="claro" ${state.config.tema === 'claro' ? 'selected' : ''}>Claro (Fundo Branco)</option>
-                                            <option value="escuro" ${state.config.tema === 'escuro' ? 'selected' : ''}>Escuro (Modo Dark)</option>
-                                        </select>
-                                    </div>
-                                    <div class="md:col-span-2 flex justify-end mt-2">
-                                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition">Atualizar Configurações</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Listagens dinâmicas com botão excluir -->
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow overflow-hidden">
-                                <h3 class="font-bold text-lg mb-4 border-b pb-2">Itens Publicados (Clique para apagar)</h3>
-                                
-                                <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
-                                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mt-4">Fotos da Galeria</h4>
-                                    ${state.galeria.map(i => `
-                                        <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-100 dark:border-gray-600">
-                                            <div class="flex items-center gap-3">
-                                                <img src="${i.imagem}" class="w-10 h-10 object-cover rounded">
-                                                <span class="text-sm font-medium">${i.titulo}</span>
-                                            </div>
-                                            <button onclick="deleteItem('galeria', '${i.id}')" class="text-red-500 hover:text-red-700 text-sm font-bold px-2">X Excluir</button>
-                                        </div>
-                                    `).join('') || '<p class="text-xs text-gray-400">Nenhuma foto cadastrada.</p>'}
-
-                                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mt-6">Vídeos</h4>
-                                    ${state.videos.map(i => `
-                                        <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-100">
-                                            <span class="text-sm font-medium truncate w-64">🎥 ${i.titulo}</span>
-                                            <button onclick="deleteItem('videos', '${i.id}')" class="text-red-500 hover:text-red-700 text-sm font-bold px-2">X Excluir</button>
-                                        </div>
-                                    `).join('') || '<p class="text-xs text-gray-400">Nenhum vídeo cadastrado.</p>'}
-
-                                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mt-6">Avisos</h4>
-                                    ${state.avisos.map(i => `
-                                        <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-100">
-                                            <span class="text-sm font-medium truncate w-64">📢 ${i.titulo} ${i.importante ? '(Urgente)' : ''}</span>
-                                            <button onclick="deleteItem('avisos', '${i.id}')" class="text-red-500 hover:text-red-700 text-sm font-bold px-2">X Excluir</button>
-                                        </div>
-                                    `).join('') || '<p class="text-xs text-gray-400">Nenhum aviso cadastrado.</p>'}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            `;
-            return container;
-        }
-
-        // ==========================================
-        // 6. FUNÇÕES DE CRUD (BANCO DE DADOS)
-        // ==========================================
-        
-        // Upload para ImgBB e salvar no Firebase
-        window.handleUpload = async (e, collectionName) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const status = e.target.querySelector('#g-status');
-            const file = document.getElementById('g-file').files[0];
-            
-            if(!file) return;
-
-            btn.disabled = true;
-            btn.innerText = "Fazendo upload para ImgBB...";
-            status.innerText = "";
-
-            try {
-                // 1. Enviar para ImgBB
-                const formData = new FormData();
-                formData.append("image", file);
-                
-                const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: 'POST', body: formData
-                });
-                const imgbbData = await imgbbRes.json();
-                
-                if (!imgbbData.success) throw new Error("Falha no upload da imagem");
-
-                const imageUrl = imgbbData.data.url;
-                btn.innerText = "Salvando no Banco...";
-
-                // 2. Salvar no Firestore
-                const docData = {
-                    titulo: document.getElementById('g-titulo').value,
-                    descricao: document.getElementById('g-desc').value,
-                    data: document.getElementById('g-data').value,
-                    imagem: imageUrl
-                };
-
-                await addDoc(collection(db, collectionName), docData);
-                
-                e.target.reset();
-                status.innerText = "Foto enviada com sucesso!";
-                setTimeout(() => status.innerText = "", 3000);
-            } catch (err) {
-                status.innerText = "Erro: " + err.message;
-                status.classList.add("text-red-500");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Fazer Upload e Salvar";
-            }
-        };
-
-        // Salvar formulário comum (Avisos, Vídeos, Eventos)
-        window.handleSave = async (e, collectionName) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "Salvando...";
-
-            try {
-                const docData = {};
-                // Coletar todos os inputs do formulário
-                e.target.querySelectorAll('input, textarea, select').forEach(input => {
-                    if(!input.id) return;
-                    const key = input.id.split('-')[1]; // Ex: "a-titulo" -> "titulo"
-                    if(input.type === 'checkbox') docData[key] = input.checked;
-                    else if(input.value) docData[key] = input.value;
-                });
-
-                await addDoc(collection(db, collectionName), docData);
-                e.target.reset();
-            } catch (err) {
-                alert("Erro ao salvar: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        };
-
-        // Atualizar Configuração Única
-        window.saveConfig = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.innerText = "Atualizando...";
-            try {
-                const docData = {
-                    nome: document.getElementById('c-nome').value,
-                    subtitulo: document.getElementById('c-subtitulo').value,
-                    logo: document.getElementById('c-logo').value,
-                    banner: document.getElementById('c-banner').value,
-                    tema: document.getElementById('c-tema').value
-                };
-
-                if (state.config.id) {
-                    await updateDoc(doc(db, "config_site", state.config.id), docData);
-                } else {
-                    await addDoc(collection(db, "config_site"), docData);
-                }
-                btn.innerText = "Atualizado com Sucesso!";
-                setTimeout(() => btn.innerText = "Atualizar Configurações", 2000);
-            } catch (err) {
-                alert("Erro ao atualizar config: " + err.message);
-                btn.innerText = "Atualizar Configurações";
-            }
-        };
-
-        // Excluir Documento
-        window.deleteItem = async (colName, id) => {
-            if (confirm("Tem certeza que deseja excluir este item permanentemente?")) {
-                try {
-                    await deleteDoc(doc(db, colName, id));
-                } catch (err) {
-                    alert("Erro ao excluir: " + err.message);
-                }
-            }
-        };
-
-        // Iniciar aplicação
+        // Inicia a aplicação ao carregar
         initApp();
     </script>
 </body>
